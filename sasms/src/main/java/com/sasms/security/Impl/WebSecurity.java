@@ -34,13 +34,16 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 		.addFilter(new AuthorizationFilter(authenticationManager()))	// and addFilter will check for AuthorizationFilter with login Credentials if he is valid or not.
 
 		
+		// #####  Problem  ######
 		// if we are having pages and and session management application
 		// this will cache the sessions of the users.
 		// if we are having 5 users than app will create and save the cache 
 		// of the users session. with authorization.
 		// and somehow we don't wanna to give authorization then 
+
+		// #### Solution ####
 		// our app will take authorization from cache and authorized the user
-		// so to resolve this issue we have to make this stateless.
+		// so to resolve this issue we have to make this STATELESS.
 		
 		.sessionManagement()
 		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
