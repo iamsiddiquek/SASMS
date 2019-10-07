@@ -29,6 +29,7 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	private final AuthenticationManager authenticationManager;
 	
+	@SuppressWarnings("unused")
 	@Autowired
 	private RoleEntity roleEntity;
 	
@@ -59,8 +60,13 @@ public class AuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
 	public void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication auth) {
 		
+		// the username will be takken from REST authentication username/email
 		String username = ((User) auth.getPrincipal()).getUsername();
 		
+		// creating the token with with some basic Constraints
+		// this token will be added to the header that every time user 
+		// request some resource it should be authenticated before giving resoure to them.
+		// localhost:8080/*login* login page is default provided by spring framework
 		String token = Jwts.builder()
 				.setSubject(username)
 				.setExpiration(new Date(System.currentTimeMillis() + SecurityConstraints.EXPIRATION_TIME))

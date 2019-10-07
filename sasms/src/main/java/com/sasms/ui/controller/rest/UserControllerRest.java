@@ -14,6 +14,7 @@ import com.sasms.io.repositories.UserRepository;
 import com.sasms.service.UserService;
 import com.sasms.shared.dto.UserDetailDto;
 import com.sasms.ui.model.request.UserDetailRequestModel;
+import com.sasms.ui.model.responce.UserDetailResponseModel;
 
 @RestController
 @RequestMapping("/users")
@@ -43,12 +44,12 @@ public class UserControllerRest {
 	// Optionally, automatic validation can be applied by annotating the argument
 	// with @Valid.
 	@PostMapping
-	public UserDetailRequestModel createUser(@RequestBody UserDetailRequestModel userDetailModel) {
+	public UserDetailResponseModel createUser(@RequestBody UserDetailRequestModel userDetailModel) {
 
 		if (userRepository.findByEmail(userDetailModel.getEmail()) != null)
 			throw new RuntimeException("Email is already present into database.");
 
-		UserDetailRequestModel userReturnValue = new UserDetailRequestModel();
+		UserDetailResponseModel userReturnValue = new UserDetailResponseModel();
 
 		UserDetailDto userDto = new UserDetailDto();
 

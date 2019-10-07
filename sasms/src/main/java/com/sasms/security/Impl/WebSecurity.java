@@ -7,6 +7,7 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.sasms.service.UserService;
@@ -29,7 +30,23 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
 		.antMatchers(HttpMethod.POST, SecurityConstraints.SIGN_UP_URL)	// any HTTP Post request sent to the */users*  should be authorized
 		.permitAll()													// should be authorized or permit all requests in this url.
 		.anyRequest().authenticated()									// any other web-service request should be authenticated.
-		.and().addFilter(getAuthenticationFilter());					// and addFilter will check for AuthenticationFilter constructor for login credentials.
+		.and().addFilter(getAuthenticationFilter())						// and addFilter will check for AuthenticationFilter constructor for login credentials.
+		.addFilter(new AuthorizationFilter(authenticationManager()))	// and addFilter will check for AuthorizationFilter with login Credentials if he is valid or not.
+
+		
+		// if we are having pages and and session management application
+		// this will cache the sessions of the users.
+		// if we are having 5 users than app will create and save the cache 
+		// of the users session. with authorization.
+		// and somehow we don't wanna to give authorization then 
+		// our app will take authorization from cache and authorized the user
+		// so to resolve this issue we have to make this stateless.
+		
+		.sessionManagement()
+		.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+		
+		
+		
 	}
 
 	
