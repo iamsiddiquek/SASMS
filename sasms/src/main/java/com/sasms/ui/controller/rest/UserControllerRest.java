@@ -16,7 +16,7 @@ import com.sasms.shared.dto.UserDetailDto;
 import com.sasms.ui.model.request.UserDetailRequestModel;
 
 @RestController
-@RequestMapping("users")
+@RequestMapping("/users")
 public class UserControllerRest {
 
 	

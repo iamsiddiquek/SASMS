@@ -6,10 +6,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 @SpringBootApplication
-public class SASMSApplication {
+public class SasmsApplication {
 
 	public static void main(String[] args) {
-		SpringApplication.run(SASMSApplication.class, args);
+		SpringApplication.run(SasmsApplication.class, args);
 	}
 
 	@Bean
