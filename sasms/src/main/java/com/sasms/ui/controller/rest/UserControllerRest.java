@@ -4,6 +4,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,10 +33,6 @@ public class UserControllerRest {
 	//################# END USER INJECTED BEANS ##########################
 	
 	//################# START USER FUNCTIONAL METHODS ##########################	
-	@GetMapping
-	public String getUser() {
-		return "Get User was called";
-	}
 
 	// @RequestBody Annotation indicating a method parameter should be bound to the
 	// body of the web request.
@@ -67,6 +64,19 @@ public class UserControllerRest {
 
 		return userReturnValue;
 	}
+	
+	
+	
+	@GetMapping("/{id}")
+	public String getUser(@PathVariable String id) {
+		
+		UserDetailDto userDto = userService.getUserByUserId(id);
+		
+		return "Get User was called";
+	}
+
+	
+	
 
 	@PutMapping
 	public String updateUser() {

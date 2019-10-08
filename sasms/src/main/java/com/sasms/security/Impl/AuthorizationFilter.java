@@ -46,7 +46,7 @@ public class AuthorizationFilter extends BasicAuthenticationFilter {
 			// this will remove the Bearer  value from token and return JSON Base64 value.
 			token = token.replace(SecurityConstraints.HEADER_STRING, "");
 			String user = Jwts.parser()
-					.setSigningKey(SecurityConstraints.TOKEN_SECRET)
+					.setSigningKey(SecurityConstraints.getTokenSecret())
 					.parseClaimsJws(token)
 					.getBody()
 					.getSubject();

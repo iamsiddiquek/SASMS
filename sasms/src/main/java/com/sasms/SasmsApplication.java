@@ -5,6 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.sasms.security.AppProperties;
+import com.sasms.security.Impl.AppPropertiesImpl;
+
 @SpringBootApplication
 public class SasmsApplication {
 
@@ -21,4 +24,10 @@ public class SasmsApplication {
 	public SpringApplicationContext applicationContext() {
 		return new SpringApplicationContext();
 	}
+	
+	@Bean("appPropertiesImpl")
+	public AppProperties getAppProperties() {
+		return new AppPropertiesImpl();
+	}
+	
 }

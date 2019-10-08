@@ -47,6 +47,10 @@ public class UserServiceImpl implements UserService {
 		return returnUserDetailDto;
 	}
 
+	// This method is provided by the *UserDetailsService* interface which is provided by the spring
+	// this will fetch user entity from DB and with their roles/authorities and allocate to the *User*
+	// class which is provided by the Spring. it has multiple Constructors to provide features of it.
+	
 	@SuppressWarnings("unused")
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -78,6 +82,16 @@ public class UserServiceImpl implements UserService {
 		userEntity.setUserId(utils.generateUserId(30));
 		userEntity.setRoles(new HashSet<>(roleRepository.findAll()));
 		userRepository.save(userEntity);		
+	}
+
+	@Override
+	public UserDetailDto getUserByUserId(String id) {
+
+		UserEntity userEntity = userRepository.findByUserId(id);
+		UserDetailDto userDto = new UserDetailDto();
+		BeanUtils.copyProperties(userEntity, userDto);
+
+		return userDto;
 	}
 
 }
