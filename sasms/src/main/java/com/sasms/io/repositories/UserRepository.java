@@ -10,9 +10,9 @@ import com.sasms.io.entity.UserEntity;
 public interface UserRepository extends JpaRepository<UserEntity, Long> {
 //	CrudRepository<T, ID> --"T" is for Entity Class and "ID" is generated ID Long
 
-	UserEntity findByEmail(String email);
+	UserEntity findUserByEmail(String email);
 
-	UserEntity findByUserId(String id);
+	UserEntity findUserByUserId(String id);
 
 	
 	

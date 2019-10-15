@@ -5,7 +5,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-public class UserDetailRequestModel {
+public class UserRequestModel {
 
 	private String firstName;
 	private String lastName;

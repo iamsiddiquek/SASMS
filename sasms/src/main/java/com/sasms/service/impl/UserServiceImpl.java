@@ -12,7 +12,10 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import com.sasms.enums.ErrorMessages;
+import com.sasms.exceptions.UserServiceException;
 import com.sasms.io.entity.RoleEntity;
 import com.sasms.io.entity.UserEntity;
 import com.sasms.io.repositories.RoleRepository;
@@ -22,6 +25,7 @@ import com.sasms.shared.Utils;
 import com.sasms.shared.dto.UserDetailDto;
 
 @Service
+@Transactional
 public class UserServiceImpl implements UserService {
 
 	@Autowired
@@ -54,7 +58,7 @@ public class UserServiceImpl implements UserService {
 	@SuppressWarnings("unused")
 	@Override
 	public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-		UserEntity userEntity = userRepository.findByEmail(email);
+		UserEntity userEntity = userRepository.findUserByEmail(email);
 		Set<GrantedAuthority> grantedAuthorities = new HashSet<>();
 		for (RoleEntity role : userEntity.getRoles()) {
 			grantedAuthorities.add(new SimpleGrantedAuthority(role.getName()));
@@ -66,8 +70,9 @@ public class UserServiceImpl implements UserService {
 	
 	@Override
 	public UserDetailDto getUserByEmail(String email) {
-		UserEntity userEntity = userRepository.findByEmail(email);
-		if(userEntity == null) throw new UsernameNotFoundException(email);
+		UserEntity userEntity = userRepository.findUserByEmail(email);
+		if (userEntity == null)
+			throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 		UserDetailDto returnedValue = new UserDetailDto();
 		BeanUtils.copyProperties(userEntity, returnedValue);		
 		return returnedValue;
@@ -85,13 +90,47 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public UserDetailDto getUserByUserId(String id) {
-
-		UserEntity userEntity = userRepository.findByUserId(id);
+	public UserDetailDto getUserByUserId(String userId) {
+		UserEntity userEntity = userRepository.findUserByUserId(userId);		
+		if(userEntity==null) throw new UsernameNotFoundException(userId);
 		UserDetailDto userDto = new UserDetailDto();
 		BeanUtils.copyProperties(userEntity, userDto);
-
 		return userDto;
+	}
+
+	@Override
+	public UserDetailDto updateUser(String id, UserDetailDto userDto) {
+		UserEntity fetchEntity = userRepository.findUserByUserId(id);
+		if(fetchEntity==null) throw new UsernameNotFoundException(id);
+		
+		if(!userDto.getFirstName().isEmpty()) {
+			fetchEntity.setFirstName(userDto.getFirstName());
+		}
+		if(!userDto.getLastName().isEmpty()) {
+			fetchEntity.setLastName(userDto.getLastName());
+		}
+		UserEntity returnEntity = userRepository.save(fetchEntity);
+		UserDetailDto returnDto = new UserDetailDto();
+		BeanUtils.copyProperties(returnEntity, returnDto);
+		return returnDto;
+	}
+
+	@Override
+	public boolean checkUserByEmail(String email) {
+
+		if (userRepository.findUserByEmail(email) != null) {
+			throw new RuntimeException("Email is already present into database.");
+		}
+		return false;
+	}
+
+	@Override
+	public void deleteUser(String id) {
+		UserEntity userEntity = userRepository.findUserByUserId(id);
+		if (userEntity != null)
+			throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
+	
+		userRepository.delete(userEntity);
 	}
 
 }

@@ -1,11 +1,15 @@
 package com.sasms.ui.model.responce;
 
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Setter
 @Getter
-public class UserDetailResponseModel {
+@NoArgsConstructor
+@AllArgsConstructor
+public class UserResponseModel {
 
 	private String userId;
 	private String firstName;

@@ -2,6 +2,9 @@ package com.sasms.ui.controller.rest;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -11,84 +14,93 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.sasms.enums.ErrorMessages;
+import com.sasms.enums.RequestOperationName;
+import com.sasms.enums.RequestOperationStatus;
+import com.sasms.exceptions.UserServiceException;
 import com.sasms.io.repositories.UserRepository;
 import com.sasms.service.UserService;
 import com.sasms.shared.dto.UserDetailDto;
-import com.sasms.ui.model.request.UserDetailRequestModel;
-import com.sasms.ui.model.responce.UserDetailResponseModel;
+import com.sasms.ui.model.request.UserRequestModel;
+import com.sasms.ui.model.responce.OperationStatusModel;
+import com.sasms.ui.model.responce.UserResponseModel;
 
 @RestController
 @RequestMapping("/users")
 public class UserControllerRest {
 
-	
-	//################# START USER INJECTED BEANS ##########################
-	
+	// ################# START USER INJECTED BEANS ##########################
 	@Autowired
-	UserService userService;
+	private UserService userService;
 
 	@Autowired
-	UserRepository userRepository;
+	private UserRepository userRepository;
 
-	//################# END USER INJECTED BEANS ##########################
-	
-	//################# START USER FUNCTIONAL METHODS ##########################	
+	// ################# END USER INJECTED BEANS ##########################
+	// ################# START USER FUNCTIONAL METHODS ##########################
 
-	// @RequestBody Annotation indicating a method parameter should be bound to the
-	// body of the web request.
-	// The body of the request is passed through an HttpMessageConverter to resolve
+	// @RequestBody parameter should be bound to the body of the web request class.
+	// The body of the request uses HttpMessageConverter to resolve
 	// the method argument depending on the content type of the request.
-	// Optionally, automatic validation can be applied by annotating the argument
-	// with @Valid.
-	@PostMapping
-	public UserDetailResponseModel createUser(@RequestBody UserDetailRequestModel userDetailModel) {
+	// @Valid Validation can be applied by annotating @Valid.
+	@PostMapping(produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE }, consumes = {
+			MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
+	public UserResponseModel createUser(@RequestBody UserRequestModel userModel) {
 
-		if (userRepository.findByEmail(userDetailModel.getEmail()) != null)
+		if (userRepository.findUserByEmail(userModel.getEmail()) != null)
 			throw new RuntimeException("Email is already present into database.");
+		UserResponseModel userReturnValue = new UserResponseModel();
 
-		UserDetailResponseModel userReturnValue = new UserDetailResponseModel();
+//		boolean userExist = userService.checkUserByEmail(userModel.getEmail());
+//		if(!userExist) {
 
 		UserDetailDto userDto = new UserDetailDto();
-
-		// BeanUtils.copyProperties(source, target) Copy the property values of the
-		// given source bean into the target bean.
-		// Note: The source and target classes do not have to match or even be derived
-		// from each other, as long as the properties match.
-		// Any bean properties that the source bean exposes but the target bean does not
-		// will silently be ignored.
-		BeanUtils.copyProperties(userDetailModel, userDto);
-
+		if (userModel.getFirstName().equals(null) || userModel.getFirstName().isEmpty()) {
+			throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
+		}
+		// BeanUtils.copyProperties(source, target) Copy the property values of source
+		// bean into the target bean.
+		// Not matched properties will be ignored silently.
+		BeanUtils.copyProperties(userModel, userDto);
 		UserDetailDto createdUser = userService.createUser(userDto);
-
 		BeanUtils.copyProperties(createdUser, userReturnValue);
-
+//		}
 		return userReturnValue;
 	}
-	
-	
-	
-	@GetMapping("/{id}")
-	public String getUser(@PathVariable String id) {
-		
+
+//	ResponseEntity is meant to represent the entire HTTP response. 
+//	You can control anything that goes into it: status code, headers, and body.
+	@GetMapping(value = "/{id}", produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
+	public ResponseEntity<UserResponseModel> getUser(@PathVariable String id) {
+
 		UserDetailDto userDto = userService.getUserByUserId(id);
-		
-		return "Get User was called";
+		UserResponseModel userReturnValue = new UserResponseModel();
+		BeanUtils.copyProperties(userDto, userReturnValue);
+
+		return new ResponseEntity<UserResponseModel>(userReturnValue, HttpStatus.OK);
 	}
 
-	
-	
-
-	@PutMapping
-	public String updateUser() {
-		return "Update User was called";
+	@PutMapping(path = "/{id}", produces = { MediaType.APPLICATION_JSON_VALUE,
+			MediaType.APPLICATION_XML_VALUE }, consumes = { MediaType.APPLICATION_JSON_VALUE,
+					MediaType.APPLICATION_XML_VALUE })
+	public UserResponseModel updateUser(@PathVariable String id, @RequestBody UserRequestModel userRequestModel) {
+		UserDetailDto userDto = new UserDetailDto();
+		BeanUtils.copyProperties(userRequestModel, userDto);
+		UserDetailDto updatedUser = userService.updateUser(id, userDto);
+		UserResponseModel returnModel = new UserResponseModel();
+		BeanUtils.copyProperties(updatedUser, returnModel);
+		return returnModel;
 	}
 
-	@DeleteMapping
-	public String deleteUser() {
-		return "Delete User was called";
+	@DeleteMapping(path = "/{id}")
+	public OperationStatusModel deleteUser(@PathVariable String id) {
+		OperationStatusModel operationStatus = new OperationStatusModel();
+		operationStatus.setOperationName(RequestOperationName.DELETE.name());
+		operationStatus.setOperationResult(RequestOperationStatus.SUCCESS.name());
+		userService.deleteUser(id);
+		return operationStatus;
 	}
 
-	//################# END USER FUNCTIONAL METHODS ##########################	
+	// ################# END USER FUNCTIONAL METHODS ##########################
 
-	
 }
