@@ -14,9 +14,7 @@ import com.sasms.service.UserService;
 import com.sasms.shared.dto.UserDetailDto;
 import com.sasms.validator.UserValidator;
 
-import lombok.extern.slf4j.Slf4j;
-
-@Slf4j
+//@Slf4j
 @Controller
 @RequestMapping("/userController")
 public class UserControllerWeb {

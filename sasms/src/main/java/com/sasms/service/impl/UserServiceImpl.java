@@ -1,10 +1,16 @@
 package com.sasms.service.impl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
@@ -37,17 +43,21 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
+	private ModelMapper modelMapper = new ModelMapper();
+	
 	
 	@Override
 	public UserDetailDto createUser(UserDetailDto userDetailDto) {
-		UserEntity userEntity = new UserEntity();
-		BeanUtils.copyProperties(userDetailDto, userEntity);
+		UserEntity userEntity = modelMapper.map(userDetailDto, UserEntity.class);
+//		BeanUtils.copyProperties(userDetailDto, userEntity);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDetailDto.getPassword()));
-		userEntity.setUserId(utils.generateUserId(30));
+		userEntity.setUserId(utils.generateRandomPublicId(30));
+		for (int i=0; i<userEntity.getAddresses().size(); i++) {
+			userEntity.getAddresses().get(i).setAddressId(utils.generateRandomPublicId(30));
+		}
 		UserEntity storedUserDetails = userRepository.save(userEntity);		
 		UserDetailDto returnUserDetailDto = new UserDetailDto();
-		BeanUtils.copyProperties(storedUserDetails, returnUserDetailDto);
-		
+		BeanUtils.copyProperties(storedUserDetails, returnUserDetailDto);		
 		return returnUserDetailDto;
 	}
 
@@ -84,7 +94,7 @@ public class UserServiceImpl implements UserService {
 		UserEntity userEntity = new UserEntity();
 		BeanUtils.copyProperties(userDetailDto, userEntity);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDetailDto.getPassword()));
-		userEntity.setUserId(utils.generateUserId(30));
+		userEntity.setUserId(utils.generateRandomPublicId(30));
 		userEntity.setRoles(new HashSet<>(roleRepository.findAll()));
 		userRepository.save(userEntity);		
 	}
@@ -131,6 +141,23 @@ public class UserServiceImpl implements UserService {
 			throw new UserServiceException(ErrorMessages.NO_RECORD_FOUND.getErrorMessage());
 	
 		userRepository.delete(userEntity);
+	}
+
+	@Override
+	public List<UserDetailDto> getUsers(int page, int limit) {
+		if (page > 0)
+			page -= 1;
+		Pageable pageable = PageRequest.of(page, limit);
+		Page<UserEntity> users = userRepository.findAll(pageable);
+		List<UserEntity> returnUsers = new ArrayList<>();
+		returnUsers = users.getContent();
+		List<UserDetailDto> returnUsersDto = new ArrayList<>();
+		for (UserEntity entity : returnUsers) {
+			UserDetailDto userDto = new UserDetailDto();
+			BeanUtils.copyProperties(entity, userDto);
+			returnUsersDto.add(userDto);
+		}
+		return returnUsersDto;
 	}
 
 }

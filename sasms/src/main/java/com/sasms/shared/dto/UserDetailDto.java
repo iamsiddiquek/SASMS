@@ -1,6 +1,7 @@
 package com.sasms.shared.dto;
 
 import java.io.Serializable;
+import java.util.List;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -14,7 +15,7 @@ public class UserDetailDto implements Serializable{
 	@Getter(value = AccessLevel.NONE)
 	private static final long serialVersionUID = 2695940262429582663L;
 
-	private Long id;
+	private Long   id;
 	private String userId;
 	private String firstName;
 	private String lastName;
@@ -23,5 +24,7 @@ public class UserDetailDto implements Serializable{
 	private String encryptedPassword;
 	private String emailVarificationToken;
 	private Boolean emailVarificationStatus=false;
+	
+	private List<AddressDto> addresses;
 
 }

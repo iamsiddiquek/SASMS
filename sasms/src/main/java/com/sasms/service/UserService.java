@@ -1,5 +1,7 @@
 package com.sasms.service;
 
+import java.util.List;
+
 import org.springframework.security.core.userdetails.UserDetailsService;
 
 import com.sasms.shared.dto.UserDetailDto;
@@ -21,6 +23,8 @@ public interface UserService extends UserDetailsService {
 	boolean checkUserByEmail(String email);
 
 	void deleteUser(String id);
+
+	List<UserDetailDto> getUsers(int page, int limit);
 
 	
 	
