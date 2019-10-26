@@ -5,10 +5,10 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -16,8 +16,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@Table(name="address")
-@Entity
+@Entity(name="addresses")
 public class AddressEntity extends CommonEntity implements Serializable {
 
 	@Setter(value = AccessLevel.NONE)
@@ -25,7 +24,7 @@ public class AddressEntity extends CommonEntity implements Serializable {
 	private static final long serialVersionUID = -1970597604691083655L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long   id;
 
 	@Column(name = "address_id", nullable = false, length = 30)

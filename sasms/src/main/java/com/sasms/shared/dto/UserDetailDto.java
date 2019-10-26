@@ -6,9 +6,11 @@ import java.util.List;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Setter
 @Getter
+@ToString
 public class UserDetailDto implements Serializable{
 
 	@Setter(value = AccessLevel.NONE)

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -18,7 +20,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.sasms.enums.ErrorMessages;
 import com.sasms.exceptions.UserServiceException;
@@ -31,7 +32,6 @@ import com.sasms.shared.Utils;
 import com.sasms.shared.dto.UserDetailDto;
 
 @Service
-@Transactional
 public class UserServiceImpl implements UserService {
 
 	@Autowired
@@ -43,6 +43,8 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private BCryptPasswordEncoder bCryptPasswordEncoder;
 	
+	private Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+	
 	private ModelMapper modelMapper = new ModelMapper();
 	
 	
@@ -52,14 +54,18 @@ public class UserServiceImpl implements UserService {
 //		BeanUtils.copyProperties(userDetailDto, userEntity);
 		userEntity.setEncryptedPassword(bCryptPasswordEncoder.encode(userDetailDto.getPassword()));
 		userEntity.setUserId(utils.generateRandomPublicId(30));
+				
 		for (int i=0; i<userEntity.getAddresses().size(); i++) {
+			userEntity.getAddresses().get(i).setUserDetails(userEntity);
 			userEntity.getAddresses().get(i).setAddressId(utils.generateRandomPublicId(30));
 		}
 		UserEntity storedUserDetails = userRepository.save(userEntity);		
 		UserDetailDto returnUserDetailDto = new UserDetailDto();
 		BeanUtils.copyProperties(storedUserDetails, returnUserDetailDto);		
+		logger.info("user is added into db.");
 		return returnUserDetailDto;
 	}
+	
 
 	// This method is provided by the *UserDetailsService* interface which is provided by the spring
 	// this will fetch user entity from DB and with their roles/authorities and allocate to the *User*

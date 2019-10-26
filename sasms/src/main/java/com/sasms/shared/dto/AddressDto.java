@@ -5,9 +5,11 @@ import java.io.Serializable;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class AddressDto implements Serializable{
 
 	@Setter(value = AccessLevel.NONE)

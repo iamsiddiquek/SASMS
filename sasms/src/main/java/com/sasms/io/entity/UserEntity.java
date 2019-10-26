@@ -9,6 +9,7 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -21,7 +22,7 @@ import lombok.Setter;
 
 @Setter
 @Getter
-@Entity(name = "users")
+@Entity()
 public class UserEntity extends CommonEntity implements Serializable{
 	
 	@Setter(value = AccessLevel.NONE)
@@ -29,7 +30,7 @@ public class UserEntity extends CommonEntity implements Serializable{
 	private static final long serialVersionUID = -4091245409341767321L;
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Column(nullable = false, length = 50)
@@ -52,14 +53,19 @@ public class UserEntity extends CommonEntity implements Serializable{
 	
 	private String emailVarificationToken;
 
-	@Column(nullable = false)
-	private Boolean emailVarificationStatus=false;
+	@Column(nullable = false, columnDefinition = "boolean default false")
+	private Boolean emailVarificationStatus;
 	
 	@ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "user_role", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
 	private Set<RoleEntity> roles;
 	
-	@OneToMany(mappedBy = "userDetails", cascade = CascadeType.ALL)
+	
+//	Specifies a collection of instances of a basic type or embeddable class.
+//	Must be specified if the collection is to be mapped by means of a collection table. 
+//	@ElementCollection(fetch = FetchType.EAGER)
+	
+	@OneToMany(mappedBy="userDetails", cascade=CascadeType.ALL, fetch = FetchType.EAGER)
 	private List<AddressEntity> addresses;
 	
 	

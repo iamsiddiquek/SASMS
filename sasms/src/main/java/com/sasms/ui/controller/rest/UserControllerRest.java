@@ -1,11 +1,18 @@
 package com.sasms.ui.controller.rest;
 
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.modelmapper.ModelMapper;
+import org.modelmapper.TypeToken;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Link;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,20 +31,25 @@ import com.sasms.enums.RequestOperationName;
 import com.sasms.enums.RequestOperationStatus;
 import com.sasms.exceptions.UserServiceException;
 import com.sasms.io.repositories.UserRepository;
+import com.sasms.service.AddressService;
 import com.sasms.service.UserService;
+import com.sasms.shared.dto.AddressDto;
 import com.sasms.shared.dto.UserDetailDto;
 import com.sasms.ui.model.request.UserRequestModel;
+import com.sasms.ui.model.responce.AddressResponseModel;
 import com.sasms.ui.model.responce.OperationStatusModel;
 import com.sasms.ui.model.responce.UserResponseModel;
 
 @RestController
 @RequestMapping("/users")
+//@CrossOrigin(origins = "*")
 public class UserControllerRest {
 
 	// ################# START USER INJECTED BEANS ##########################
 	@Autowired
-	private UserService userService;
-
+	private UserService userService;	
+	@Autowired
+	private AddressService addressService;
 	@Autowired
 	private UserRepository userRepository;
 
@@ -51,6 +63,8 @@ public class UserControllerRest {
 	// The body of the request uses HttpMessageConverter to resolve
 	// the method argument depending on the content type of the request.
 	// @Valid Validation can be applied by annotating @Valid.
+
+//	@CrossOrigin(origins = {"http://localhost:8484", "https://google.com:4200/login"})
 	@PostMapping(
 			produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE },
 			consumes = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE })
@@ -60,7 +74,6 @@ public class UserControllerRest {
 			throw new RuntimeException("Email is already present into database.");
 
 //		boolean userExist = userService.checkUserByEmail(userModel.getEmail());
-//		if(!userExist) 
 
 		if (userModel.getFirstName().isEmpty()) {
 			throw new UserServiceException(ErrorMessages.MISSING_REQUIRED_FIELD.getErrorMessage());
@@ -85,6 +98,8 @@ public class UserControllerRest {
 	public ResponseEntity<UserResponseModel> getUser(@PathVariable String id) {
 
 		UserDetailDto userDto = userService.getUserByUserId(id);
+//		UserResponseModel userReturnValue = new UserResponseModel();
+//		BeanUtils.copyProperties(userDto, userReturnValue);
 		UserResponseModel userReturnValue = modelMapper.map(userDto, UserResponseModel.class);
 //		BeanUtils.copyProperties(userDto, userReturnValue);
 		return new ResponseEntity<UserResponseModel>(userReturnValue, HttpStatus.OK);
@@ -124,6 +139,54 @@ public class UserControllerRest {
 		}
 		return new ResponseEntity<List<UserResponseModel>> (returnUserList, HttpStatus.OK);
 	}
+	
+	@GetMapping(path = "/{userId}/addresses", produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, "application/hal+json"})
+	public Resource<ResponseEntity<List<AddressResponseModel>>> userAddresses(@PathVariable String userId) {	
+		List<AddressDto> addressesDto = addressService.getAddresses(userId);
+
+//		Type is the common super interface for all types in the Java programming language. 
+//		These include raw types, parameterized types,array types, type variables and primitive types.		
+
+//		  Represents a generic type T. Sub classing TypeToken allows for type
+//		  information to be preserved at runtime. Example: To create a type literal for
+//		  List<String>, you can create an empty anonymous inner class:
+//		  TypeToken<List<String>> list = new TypeToken<List<String>>();
+		Type listType  = new TypeToken<List<AddressResponseModel>>() {}.getType();
+		List<AddressResponseModel> returnValue = modelMapper.map(addressesDto, listType);
+		
+		if(returnValue != null && !returnValue.isEmpty()) {
+			for (AddressResponseModel addressResponseModel : returnValue) {
+				Link selfLink = linkTo(methodOn(UserControllerRest.class).userAddresses(userId)).withSelfRel();
+				Link userLink = linkTo(methodOn(UserControllerRest.class).getUser(userId)).withRel("user");
+				addressResponseModel.add(selfLink);
+				addressResponseModel.add(userLink);
+			}
+		}
+		
+		return new Resource<>(new ResponseEntity<List<AddressResponseModel>>(returnValue, HttpStatus.OK));
+	}
+	
+	
+	
+	
+	@GetMapping(path = "/{userId}/addresses/{addressId}", 
+			produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_XML_VALUE, "application/hal+json" })
+	public Resource<ResponseEntity<AddressResponseModel>> userAddress(@PathVariable String userId, @PathVariable String addressId) {
+		AddressDto addressesDto = addressService.getUserAddress(addressId);
+		Type listType = new TypeToken<AddressResponseModel>() {}.getType();
+		AddressResponseModel returnValue = modelMapper.map(addressesDto, listType);
+		
+//		Link linkAddress = linkTo(UserControllerRest.class).slash(userId).slash("addresses").slash(addressId).withSelfRel();
+		Link linkAddress = linkTo(methodOn(UserControllerRest.class).userAddress(userId, addressId)).withSelfRel();
+		Link userLink	 = linkTo(methodOn(UserControllerRest.class).getUser(userId)).withRel("user");
+		Link addressesLink = linkTo(UserControllerRest.class).slash(userId).slash("addresses").withRel("addresses");
+		
+		returnValue.add(linkAddress);
+		returnValue.add(userLink);
+		returnValue.add(addressesLink);
+		
+		return new Resource<>(new ResponseEntity<AddressResponseModel>(returnValue, HttpStatus.OK));
+	}		
 	
 	// ################# END USER FUNCTIONAL METHODS ##########################
 
